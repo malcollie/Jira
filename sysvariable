@@ -7,19 +7,20 @@ $env:JIRA_API_TOKEN = "your_api_token"
 from jira import JIRA
 
 # Replace these variables with your Jira instance details
-JIRA_SERVER = 'https://your-jira-instance.com'
-USERNAME = 'your_username'
-PASSWORD = 'your_password'
-PROJECT_KEY = 'your_project_key'
-ISSUE_KEY = 'your_issue_key'
+JIRA_SERVER = 'https://[yoursitename].atlassian.net'
+USERNAME = '[your_username]'
+API_TOKEN = '[your_api_token]'
 
 # Create a Jira client instance with basic authentication
-jira = JIRA(server=JIRA_SERVER, basic_auth=(USERNAME, PASSWORD))
+jira = JIRA(server=JIRA_SERVER, basic_auth=(USERNAME, API_TOKEN))
 
-# Get the issue
-issue = jira.issue(ISSUE_KEY)
+# Define the JQL query for the search
+jql_query = 'ORDER BY Created'
 
-# Print some information about the issue
-print(f"Summary: {issue.fields.summary}")
-print(f"Description: {issue.fields.description}")
-print(f"Status: {issue.fields.status}")
+# Make the API call to search for issues
+search_results = jira.search_issues(jql_query)
+
+# Print some information about the search results
+print(f"Total issues found: {search_results.total}")
+for issue in search_results:
+    print(f"Issue Key: {issue.key}, Summary: {issue.fields.summary}, Created: {issue.fields.created}")
