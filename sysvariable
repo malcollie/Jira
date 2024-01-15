@@ -1,8 +1,4 @@
-# Set JIRA_URL environment variable
-[Environment]::SetEnvironmentVariable("JIRA_URL", "https://your-jira-instance.com", [System.EnvironmentVariableTarget]::Machine)
-
-# Set JIRA_USERNAME environment variable
-[Environment]::SetEnvironmentVariable("JIRA_USERNAME", "your_username", [System.EnvironmentVariableTarget]::Machine)
-
-# Set JIRA_API_TOKEN environment variable
-[Environment]::SetEnvironmentVariable("JIRA_API_TOKEN", "your_api_token", [System.EnvironmentVariableTarget]::Machine)
+# Set your environment variables
+$env:JIRA_URL = "https://your-jira-instance.com"
+$env:JIRA_USERNAME = "your_username"
+$env:JIRA_API_TOKEN = "your_api_token"
