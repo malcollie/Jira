@@ -1,0 +1,34 @@
+import requests
+import os
+
+# Fetch sensitive variables from system environment
+JIRA_URL = os.environ.get('JIRA_URL')
+JIRA_API_TOKEN = os.environ.get('JIRA_API_TOKEN')
+
+def test_api_token():
+    try:
+        # Jira API endpoint for current user details
+        api_url = f"{JIRA_URL}/rest/api/2/myself"
+
+        # Set up headers with basic authentication using API token
+        headers = {
+            'Authorization': f'Basic {JIRA_API_TOKEN}'
+        }
+
+        # Make a GET request to the Jira API
+        response = requests.get(api_url, headers=headers)
+
+        # Check the response status
+        if response.status_code == 200:
+            print("API token is valid. User details:")
+            print(response.json())
+        else:
+            print(f"Error: {response.status_code} - {response.text}")
+    except Exception as e:
+        print(f"Error: {e}")
+
+def main():
+    test_api_token()
+
+if __name__ == "__main__":
+    main()
