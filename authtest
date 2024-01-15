@@ -1,34 +1,31 @@
-import requests
-import os
+from jira import JIRA
 
-# Fetch sensitive variables from system environment
-JIRA_URL = os.environ.get('JIRA_URL')
-JIRA_API_TOKEN = os.environ.get('JIRA_API_TOKEN')
+def get_jira_issue(issue_key, bearer_token):
+    # JIRA server URL
+    server_url = 'https://your-jira-instance-url.com'
 
-def test_api_token():
+    # Create a JIRA client with the server URL and authentication token
+    options = {'server': server_url}
+    jira = JIRA(options=options, basic_auth=('username', bearer_token))
+
     try:
-        # Jira API endpoint for current user details
-        api_url = f"{JIRA_URL}/rest/api/2/myself"
-
-        # Set up headers with basic authentication using API token
-        headers = {
-            'Authorization': f'Basic {JIRA_API_TOKEN}'
-        }
-
-        # Make a GET request to the Jira API
-        response = requests.get(api_url, headers=headers)
-
-        # Check the response status
-        if response.status_code == 200:
-            print("API token is valid. User details:")
-            print(response.json())
-        else:
-            print(f"Error: {response.status_code} - {response.text}")
+        # Get the issue by key
+        issue = jira.issue(issue_key)
+        return issue
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error fetching issue {issue_key}: {e}")
+        return None
 
-def main():
-    test_api_token()
+# Replace 'your-jira-instance-url.com', 'username', 'your-bearer-token', and 'EXAMPLE-123' with your actual values
+bearer_token = 'your-bearer-token'
+issue_key = 'EXAMPLE-123'
 
-if __name__ == "__main__":
-    main()
+# Call the function to get the JIRA issue
+result_issue = get_jira_issue(issue_key, bearer_token)
+
+# Print the result
+if result_issue:
+    print(f"Issue Summary: {result_issue.fields.summary}")
+    print(f"Issue Description: {result_issue.fields.description}")
+else:
+    print("Failed to retrieve the JIRA issue.")
