@@ -4,34 +4,22 @@ $env:JIRA_USERNAME = "your_username"
 $env:JIRA_API_TOKEN = "your_api_token"
 
 
+from jira import JIRA
 
-import requests
+# Replace these variables with your Jira instance details
+JIRA_SERVER = 'https://your-jira-instance.com'
+USERNAME = 'your_username'
+PASSWORD = 'your_password'
+PROJECT_KEY = 'your_project_key'
+ISSUE_KEY = 'your_issue_key'
 
-def make_request():
-    try:
-        # Hardcoded values for authentication
-        username = "your_username"
-        api_token = "your_api_token"
+# Create a Jira client instance with basic authentication
+jira = JIRA(server=JIRA_SERVER, basic_auth=(USERNAME, PASSWORD))
 
-        # URL to make a request to
-        url = "https://your-jira-instance.com/rest/api/2/myself"
+# Get the issue
+issue = jira.issue(ISSUE_KEY)
 
-        # Set up headers with basic authentication
-        headers = {
-            'Authorization': f'Basic {username}:{api_token}'
-        }
-
-        # Make a GET request
-        response = requests.get(url, headers=headers)
-
-        # Print the response status code
-        print(f"Response Status Code: {response.status_code}")
-
-        # Print the response content (for debugging)
-        print("Response Content:")
-        print(response.text)
-    except Exception as e:
-        print(f"Error: {e}")
-
-if __name__ == "__main__":
-    make_request()
+# Print some information about the issue
+print(f"Summary: {issue.fields.summary}")
+print(f"Description: {issue.fields.description}")
+print(f"Status: {issue.fields.status}")
