@@ -2,3 +2,36 @@
 $env:JIRA_URL = "https://your-jira-instance.com"
 $env:JIRA_USERNAME = "your_username"
 $env:JIRA_API_TOKEN = "your_api_token"
+
+
+
+import requests
+
+def make_request():
+    try:
+        # Hardcoded values for authentication
+        username = "your_username"
+        api_token = "your_api_token"
+
+        # URL to make a request to
+        url = "https://your-jira-instance.com/rest/api/2/myself"
+
+        # Set up headers with basic authentication
+        headers = {
+            'Authorization': f'Basic {username}:{api_token}'
+        }
+
+        # Make a GET request
+        response = requests.get(url, headers=headers)
+
+        # Print the response status code
+        print(f"Response Status Code: {response.status_code}")
+
+        # Print the response content (for debugging)
+        print("Response Content:")
+        print(response.text)
+    except Exception as e:
+        print(f"Error: {e}")
+
+if __name__ == "__main__":
+    make_request()
