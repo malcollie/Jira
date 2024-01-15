@@ -1,0 +1,22 @@
+import os
+from jira import JIRA
+
+# Fetch sensitive variables from system environment
+jira_url = os.environ.get('JIRA_URL')
+jira_username = os.environ.get('JIRA_USERNAME')
+jira_api_token = os.environ.get('JIRA_API_TOKEN')
+
+# Create Jira connection
+jira = JIRA(server=jira_url, basic_auth=(jira_username, jira_api_token))
+
+# Iterate over every story task in your Jira project
+issues = jira.search_issues('project=YOUR_PROJECT AND type=Story', maxResults=False)
+for issue in issues:
+    # Check if the story has an epic link
+    if hasattr(issue.fields, 'customfield_10005') and issue.fields.customfield_10005:
+        epic_link = issue.fields.customfield_10005
+        epic_issue = jira.issue(epic_link)
+
+        # Update the due date of the story task to the due date of the epic
+        if hasattr(epic_issue.fields, 'duedate') and epic_issue.fields.duedate:
+            issue.update(fields={'duedate': epic_issue.fields.duedate})
