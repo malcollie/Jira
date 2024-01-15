@@ -1,0 +1,22 @@
+from jira import JIRA
+
+def check_access_with_pat(api_token):
+    # JIRA server URL
+    server_url = 'https://your-jira-instance-url.com'
+
+    # Create a JIRA client with the server URL and personal access token
+    options = {'server': server_url}
+    jira = JIRA(options=options, token_auth=api_token)
+
+    try:
+        # Make a simple call to get the current user (you can replace this with any API call)
+        current_user = jira.myself()
+        print(f"Successfully authenticated as {current_user.displayName}")
+    except Exception as e:
+        print(f"Authentication failed: {e}")
+
+# Replace 'your-jira-instance-url.com' and 'your-api-token' with your actual values
+api_token = 'your-api-token'
+
+# Call the function to check access
+check_access_with_pat(api_token)
