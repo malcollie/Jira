@@ -1,0 +1,71 @@
+import requests
+
+# Replace 'your-jira-instance' and 'your-bearer-token' with your actual values
+jira_instance = 'https://your-jira-instance'
+bearer_token = 'your-bearer-token'
+
+# Replace 'your-project-key' with the actual key of your project
+project_key = 'your-project-key'
+
+# Step 1: Make a GET request to get all Story issues in the project
+search_endpoint = f'{jira_instance}/rest/api/2/search'
+jql_query = f'project={project_key} AND issuetype = Story'
+fields_to_retrieve = 'key,customfield_123'
+start_at = 0
+max_results = 1000
+
+# Initialize an empty list to store all Story issues
+all_story_issues = []
+
+while True:
+    search_params = {'jql': jql_query, 'fields': fields_to_retrieve, 'startAt': start_at, 'maxResults': max_results}
+    response = requests.get(search_endpoint, params=search_params, headers={'Authorization': f'Bearer {bearer_token}'})
+
+    if response.status_code == 200:
+        issues = response.json().get('issues', [])
+
+        if not issues:
+            break
+
+        all_story_issues.extend(issues)
+        start_at += max_results
+    else:
+        print(f"Failed to search for Story issues. Status code: {response.status_code}, Response: {response.text}")
+        break
+
+# Step 2: Iterate through all Story issues and apply the logic
+for story_issue in all_story_issues:
+    story_issue_key = story_issue['key']
+    customfield_123_value = story_issue['fields'].get('customfield_123')
+
+    if customfield_123_value is not None:
+        # Step 3: Make a GET request to the Epic link
+        epic_link_issue_key = customfield_123_value
+        epic_link_issue_endpoint = f'{jira_instance}/rest/api/2/issue/{epic_link_issue_key}'
+        epic_link_response = requests.get(epic_link_issue_endpoint, headers={'Authorization': f'Bearer {bearer_token}'})
+
+        if epic_link_response.status_code == 200:
+            # Step 4: Store the duedate field value as a variable called duedate
+            epic_link_data = epic_link_response.json()
+            duedate = epic_link_data['fields'].get('duedate')
+
+            if duedate is not None:
+                # Step 5: Update the duedate field in the Story issue
+                update_issue_endpoint = f'{jira_instance}/rest/api/2/issue/{story_issue_key}'
+                update_issue_payload = {'fields': {'duedate': duedate}}
+                update_response = requests.put(update_issue_endpoint, json=update_issue_payload,
+                                               headers={'Authorization': f'Bearer {bearer_token}', 'Content-Type': 'application/json'})
+
+                if update_response.status_code == 204:
+                    print(f"Due date updated successfully for Story issue {story_issue_key}")
+                else:
+                    print(f"Failed to update due date for Story issue {story_issue_key}. Status code: {update_response.status_code}, Response: {update_response.text}")
+
+            else:
+                print(f"Epic link issue {epic_link_issue_key} does not have a duedate field.")
+
+        else:
+            print(f"Failed to fetch Epic link issue {epic_link_issue_key}. Status code: {epic_link_response.status_code}, Response: {epic_link_response.text}")
+
+    else:
+        print(f"Customfield_123 is null in the Story issue {story_issue_key}.")
