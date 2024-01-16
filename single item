@@ -1,0 +1,55 @@
+import requests
+
+# Replace 'your-jira-instance' and 'your-bearer-token' with your actual values
+jira_instance = 'https://your-jira-instance'
+bearer_token = 'your-bearer-token'
+
+# Replace 'your-story-issue-key' with the actual key of your Story issue
+story_issue_key = 'your-story-issue-key'
+
+# Step 1: Make a GET request to the Story issue
+story_issue_endpoint = f'{jira_instance}/rest/api/2/issue/{story_issue_key}'
+story_response = requests.get(story_issue_endpoint, headers={'Authorization': f'Bearer {bearer_token}'})
+
+# Check the response status
+if story_response.status_code == 200:
+    # Step 2: Check if customfield_123 is not null in the Story response
+    story_data = story_response.json()
+    customfield_123_value = story_data['fields'].get('customfield_123')
+
+    if customfield_123_value is not None:
+        # Step 3: Make a GET request to the Epic link
+        epic_link_issue_key = customfield_123_value
+        epic_link_issue_endpoint = f'{jira_instance}/rest/api/2/issue/{epic_link_issue_key}'
+        epic_link_response = requests.get(epic_link_issue_endpoint, headers={'Authorization': f'Bearer {bearer_token}'})
+
+        # Check the response status
+        if epic_link_response.status_code == 200:
+            # Step 4: Store the duedate field value as a variable called duedate
+            epic_link_data = epic_link_response.json()
+            duedate = epic_link_data['fields'].get('duedate')
+
+            if duedate is not None:
+                # Step 5: Update the duedate field in the Story issue
+                update_issue_endpoint = f'{jira_instance}/rest/api/2/issue/{story_issue_key}'
+                update_issue_payload = {'fields': {'duedate': duedate}}
+                update_response = requests.put(update_issue_endpoint, json=update_issue_payload,
+                                               headers={'Authorization': f'Bearer {bearer_token}', 'Content-Type': 'application/json'})
+
+                # Check the update response status
+                if update_response.status_code == 204:
+                    print(f"Due date updated successfully for Story issue {story_issue_key}")
+                else:
+                    print(f"Failed to update due date. Status code: {update_response.status_code}, Response: {update_response.text}")
+
+            else:
+                print("Epic link does not have a duedate field.")
+
+        else:
+            print(f"Failed to fetch Epic link issue. Status code: {epic_link_response.status_code}, Response: {epic_link_response.text}")
+
+    else:
+        print("Customfield_123 is null in the Story issue.")
+
+else:
+    print(f"Failed to fetch Story issue. Status code: {story_response.status_code}, Response: {story_response.text}")
