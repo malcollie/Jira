@@ -1,0 +1,52 @@
+import csv
+import requests
+
+# Jira API endpoint for updating issues
+JIRA_API_ENDPOINT = "https://your-jira-instance/rest/api/2/issue/"
+
+# Jira API bearer token
+BEARER_TOKEN = "your-bearer-token"
+
+def update_due_date(issue_key, new_due_date):
+    # Jira API endpoint for updating a specific issue
+    issue_url = f"{JIRA_API_ENDPOINT}{issue_key}"
+
+    # Jira REST API request payload for updating the due date
+    payload = {
+        "fields": {
+            "duedate": new_due_date
+        }
+    }
+
+    # Jira REST API request headers with bearer token
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {BEARER_TOKEN}"
+    }
+
+    # Make the PUT request to update the due date
+    response = requests.put(issue_url, json=payload, headers=headers)
+
+    # Check if the request was successful (status code 200)
+    if response.status_code == 200:
+        print(f"Due date updated successfully for {issue_key}")
+    else:
+        print(f"Failed to update due date for {issue_key}. Status code: {response.status_code}")
+
+def main():
+    # CSV file path
+    csv_file_path = "path/to/your/csv_file.csv"
+
+    # Open the CSV file and read the rows
+    with open(csv_file_path, newline="", encoding="utf-8") as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            # Extract the necessary information from the CSV row
+            issue_key = row["Issue Key"]
+            new_due_date = row["New Due Date"]
+
+            # Update the due date for the current issue
+            update_due_date(issue_key, new_due_date)
+
+if __name__ == "__main__":
+    main()
