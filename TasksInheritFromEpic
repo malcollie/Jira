@@ -1,0 +1,82 @@
+import argparse
+import requests
+
+def update_issue_fields(issue_key, fields_to_update, field_values, jira_instance, bearer_token):
+    # Make a GET request to the issue
+    issue_endpoint = f'{jira_instance}/rest/api/2/issue/{issue_key}'
+    issue_response = requests.get(issue_endpoint, headers={'Authorization': f'Bearer {bearer_token}'})
+
+    if issue_response.status_code == 200:
+        issue_data = issue_response.json()
+
+        # Prepare the update payload
+        update_payload = {'fields': {}}
+        for field, value in zip(fields_to_update, field_values):
+            update_payload['fields'][field] = value
+
+        # Make a PUT request to update the fields
+        update_response = requests.put(issue_endpoint, json=update_payload,
+                                       headers={'Authorization': f'Bearer {bearer_token}', 'Content-Type': 'application/json'})
+
+        if update_response.status_code == 204:
+            print(f"Fields updated successfully for issue {issue_key}")
+        else:
+            print(f"Failed to update fields for issue {issue_key}. Status code: {update_response.status_code}, Response: {update_response.text}")
+
+    else:
+        print(f"Failed to fetch issue {issue_key}. Status code: {issue_response.status_code}, Response: {issue_response.text}")
+
+def main():
+    parser = argparse.ArgumentParser(description='Update fields in Jira issues.')
+    parser.add_argument('fields', nargs='+', choices=['duedate', 'teamname', 'components'],
+                        help='Fields to update in the Jira issues')
+    
+    # Replace 'your-jira-instance' and 'your-bearer-token' with your actual values
+    parser.add_argument('--jira-instance', required=True, help='Jira instance URL')
+    parser.add_argument('--bearer-token', required=True, help='Bearer token for authentication')
+
+    # Replace 'your-project-key' with the actual key of your project
+    parser.add_argument('--project-key', required=True, help='Jira project key')
+
+    args = parser.parse_args()
+
+    # Make a GET request to get all Task issues in the project
+    search_endpoint = f'{args.jira_instance}/rest/api/2/search'
+    jql_query = f'project={args.project_key} AND issuetype = Task'
+    fields_to_retrieve = 'key'
+    start_at = 0
+    max_results = 1000
+
+    # Initialize an empty list to store all Task issues
+    all_task_issues = []
+
+    while True:
+        search_params = {'jql': jql_query, 'fields': fields_to_retrieve, 'startAt': start_at, 'maxResults': max_results}
+        response = requests.get(search_endpoint, params=search_params, headers={'Authorization': f'Bearer {args.bearer_token}'})
+
+        if response.status_code == 200:
+            issues = response.json().get('issues', [])
+
+            if not issues:
+                break
+
+            all_task_issues.extend(issues)
+            start_at += max_results
+        else:
+            print(f"Failed to search for Task issues. Status code: {response.status_code}, Response: {response.text}")
+            break
+
+    # Iterate through all Task issues and apply the logic
+    for task_issue in all_task_issues:
+        task_issue_key = task_issue['key']
+
+        # Make a GET request to the Epic link
+        epic_link_issue_key = task_issue['fields'].get('customfield_123')
+        if epic_link_issue_key is not None:
+            for field in args.fields:
+                update_issue_fields(epic_link_issue_key, [field], [task_issue['fields'].get(field)], args.jira_instance, args.bearer_token)
+        else:
+            print(f"Customfield_123 is null in the Task issue {task_issue_key}.")
+
+if __name__ == "__main__":
+    main()
