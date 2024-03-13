@@ -1,0 +1,42 @@
+import requests
+
+# Your Jira instance URL
+JIRA_URL = 'https://your-jira-instance.com'
+# Your API token (Bearer token)
+API_TOKEN = 'your-api-token'
+
+# Define your JQL query
+jql_query = 'project = "Your Project" AND status = "Your Current Status"'
+# Transition ID
+transition_id = '71'
+
+# Set up the headers with the bearer token
+headers = {
+    'Authorization': f'Bearer {API_TOKEN}',
+    'Content-Type': 'application/json'
+}
+
+# Find issues based on the JQL query
+search_url = f"{JIRA_URL}/rest/api/2/search"
+search_payload = {
+    'jql': jql_query,
+    'fields': ['key']
+}
+response = requests.post(search_url, headers=headers, json=search_payload)
+
+if response.status_code == 200:
+    issues = response.json().get('issues', [])
+    for issue in issues:
+        issue_key = issue['key']
+        # Transition each issue to the desired transition ID
+        transition_url = f"{JIRA_URL}/rest/api/2/issue/{issue_key}/transitions"
+        transition_payload = {
+            'transition': {'id': transition_id}
+        }
+        transition_response = requests.post(transition_url, headers=headers, json=transition_payload)
+        if transition_response.status_code == 204:
+            print(f"Issue {issue_key} transitioned to transition ID {transition_id}")
+        else:
+            print(f"Failed to transition issue {issue_key}: {transition_response.text}")
+else:
+    print(f"Failed to fetch issues: {response.text}")
